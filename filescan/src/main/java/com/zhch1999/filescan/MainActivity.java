@@ -292,6 +292,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                      * 进入文件夹后取消多选模式
                      */
                     chooseType=0;
+                    checkBoxAllChoose.setChecked(false);
                 } else {
                     if (operateType.equals("double")) {
                         if (checkedView == (view.hashCode())) {
