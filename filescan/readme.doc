@@ -1,0 +1,25 @@
+使用filescan模块需知
+　　　实现功能：独立文件选择模块，根据用户传入的文件类型进行文件选择，选择完成后返回对应的操作码和选择的文件信息。
+1.要遵循调用规则和传递对应的参数，如果参数值为空，参数也不能省
+2.调用完成后会返回对应的返回码，用户可根据返回码判断返回情况 
+3.具体请求参数如下
+fileTypes：要筛选的文件类型
+operateType：操作类型 可选值[single，double，more] 
+示例：
+　　　String[] arrFileType ={"dxg", "dwg", "dxf","txt","dat"}; 
+　　　//String 数组的文件后缀
+　　　intent.putExtra("fileTypes",arrFileType);  //要筛选的文件类型
+　　　intent.putExtra("operateType","single"); 
+　　　操作类型==>single 代表单选 double代表二次选择才能确认选择文件 more 多选 多选后需要点击确定才能生效 前面两种均返回单个文件 more选择返回一个文件列表
+4.返回码 
+　　　使用时请根据返回码做判断后再获取其余的参数
+　　　operateType为single或者double时:
+　　　返回码 512 代表选择文件成功  314代表未选择文件或者选择失败
+　　　path是返回文件的全路径
+　　　suffix 是选择文件的后缀
+　　　fileName 文件名
+　　　获取参数示例：
+　　　Bundle bundle = intent.getExtras();
+　　　bundle.getString("path");
+　　　返回码 444 用户发起格式编辑请求，则切回用户自己页面，由用户页面进行格式编辑功能操作和重新发起下一次操作。返回444时无附带参数。
+　　　返回222 时，代表用户请求时操作模式为more。所以返回结果为一个列表。

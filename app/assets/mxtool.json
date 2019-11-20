@@ -1,0 +1,39 @@
+
+{	
+
+	"but1":["ID_Tool_draw","1"],
+	"but1":["ID_Tool_comment","2"],
+	"but1":["ID_Tool_tool","3"],
+	
+	
+
+	"but2":["1","ID_LINE","Mx_Line","line.png"],
+	"but2":["1","ID_CIRCLE","Mx_Circle","circle.png"],
+	"but2":["1","ID_POINT","Mx_Point","point.png"],
+	
+
+	"but2":["1","ID_ARC","Mx_Arc","arc.png"],
+	"but2":["1","ID_RECT","Mx_Rect","rect.png"],
+	"but2":["1","ID_ELLIPSE","Mx_Ellipse", "ellipse.png"],
+	"but2":["1","ID_TEXT","Mx_Text", "text.png"],
+	
+	"but2":["2","Custom","55","rect.png"],
+	"but2":["2","Custom","-65","rect.png"],
+	
+	"but2":["2","IDT_PHOTO","Mx_Photo","photo.png"],
+	"but2":["2","IDT_AUDIO","Mx_Audio","audio.png"],
+	"but2":["2","IDT_FREEDRAW","Mx_DrawFree","freedraw.png"],
+	"but2":["2","IDT_REVCLOUDDRAW","Mx_DrawRevcloud","revcloud.png"],
+
+
+
+	"but2":["3","IDT_LAYER","Mx_LayerManager","layermanagerico.png"],
+	"but2":["3","IDT_FIND","Mx_FindText","findtext.png"],
+	"but2":["3","IDT_MEASURE","Mx_Measure","distance.png"],
+	"but2":["3","IDT_AREA","Mx_CaleArea","area.png"]
+	
+	
+
+}
+
+	
