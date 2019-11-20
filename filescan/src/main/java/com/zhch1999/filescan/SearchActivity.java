@@ -39,6 +39,7 @@ public class SearchActivity extends AppCompatActivity {
     private int FILE_SCAN_SUCCESS=512; //选择单个文件成功
     private int FILE_SCAN_FAILURE=314;//选择文件失败
     private final static int FILES_SCAN_SUCCESS = 222;//获取多个文件成功
+    private String searchPath=""; //上一个页面传过来的搜索路径
     /**
      * 双击和多选的参数
      */
@@ -61,6 +62,7 @@ public class SearchActivity extends AppCompatActivity {
         final Intent intent=getIntent();
         Bundle bundle=intent.getExtras();
         operateType=bundle.getString("op");//获取操作类型 single单击进入 double单机选择 双击进入 more多选
+        searchPath=bundle.getString("path");
         listViewSearch.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -206,7 +208,7 @@ public class SearchActivity extends AppCompatActivity {
              */
             String searchContent=objects[0].toString();
             Log.e("搜索内容",searchContent);
-            String rootPath= Environment.getExternalStorageDirectory().getPath();//默认的手机内存的根路径
+            String rootPath= searchPath;//Environment.getExternalStorageDirectory().getPath();//默认的手机内存的根路径
             File rootFile=new File(rootPath);
             List<FileBean> searchRes=new ArrayList<>();
             File[] listRootFiles=rootFile.listFiles();

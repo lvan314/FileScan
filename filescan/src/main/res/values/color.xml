@@ -2,4 +2,6 @@
 <resources>
     <color name="Lavender">#E6E6FA</color>
     <color name="LightSteelBlue">#B0C4DE</color>
+    <color name="color_text_black">#333333</color>
+    <color name="color_e3">#e3e3e3</color>
 </resources>

@@ -1,32 +1,30 @@
 package com.zhch1999.filescan;
-
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ActionBar;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
-import android.print.PrinterId;
+import android.text.Layout;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.RadioButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sdsmdg.tastytoast.TastyToast;
@@ -80,6 +78,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private List<FileBean> filesChoosedList = new ArrayList<>(); //如果是多选状态，则暂存用户选择的文件信息
     private List<View> viewsChooosedList = new ArrayList<>();//多选状态，则暂存用户点击的view
     private String fileOrderType="no"; //文件排序类型
+    private float oneMm2Px=0; //1mm对应的px
+    private int list_item_max=0;//listview能显示的最大item的数量
+    private int chooseType=0;//0 非多选 1 多选
+    private CheckBox checkBoxAllChoose; //全选
+    private TextView textViewAllChoose;//全选
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -107,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+                intent.putExtra("path",nowFilePath);
                 intent.putExtra("op", operateType);//传入选择类型
                 startActivityForResult(intent, SEARCH_ACTVITY_CODE);
 
@@ -201,26 +206,65 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         finish();
                     }
                 } else if (operateType.equals("more")) {
-                    ArrayList<String> resultList = new ArrayList<>();
-                    if (filesChoosedList.size() != 0) {
-                        for (FileBean fileBean : filesChoosedList) {
-                            resultList.add(fileBean.getFilePath());
-                        }
-                        Intent intent1 = getIntent();
-                        //intent1.putExtra("fileList", (Parcelable) resultList);
-                        Bundle bundle1 = new Bundle();
-                        bundle1.putStringArrayList("fileList", resultList);
-                        intent1.putExtras(bundle1);
-                        setResult(FILES_SCAN_SUCCESS, intent1);
-                        finish();
-                    } else {
+                    if(chooseType==0){
                         /**
-                         * 未选中任何文件
+                         * 默认的多选
                          */
-                        intent.putExtra("path", "--------->");
-                        setResult(FILE_SCAN_FAILURE, intent);
-                        finish();
+                        ArrayList<String> resultList = new ArrayList<>();
+                        if (filesChoosedList.size() != 0) {
+                            for (FileBean fileBean : filesChoosedList) {
+                                resultList.add(fileBean.getFilePath());
+                            }
+                            Intent intent1 = getIntent();
+                            //intent1.putExtra("fileList", (Parcelable) resultList);
+                            Bundle bundle1 = new Bundle();
+                            bundle1.putStringArrayList("fileList", resultList);
+                            intent1.putExtras(bundle1);
+                            setResult(FILES_SCAN_SUCCESS, intent1);
+                            finish();
+                        } else {
+                            /**
+                             * 未选中任何文件
+                             */
+                            intent.putExtra("path", "--------->");
+                            setResult(FILE_SCAN_FAILURE, intent);
+                            finish();
+                        }
+                    }else {
+                        /**
+                         * 多选框的多选
+                         */
+                        ArrayList<String> resultList = new ArrayList<>();
+                        if (fileBeanList.size() != 0) {
+                            for (FileBean fileBean : fileBeanList) {
+                                if(fileBean.isChecked){
+                                    resultList.add(fileBean.getFilePath());
+                                }
+                            }
+                            if(resultList.size()==0){
+                                intent.putExtra("path", "--------->");
+                                setResult(FILE_SCAN_FAILURE, intent);
+                                finish();
+                            }else{
+                                Intent intent1 = getIntent();
+                                //intent1.putExtra("fileList", (Parcelable) resultList);
+                                Bundle bundle1 = new Bundle();
+                                bundle1.putStringArrayList("fileList", resultList);
+                                intent1.putExtras(bundle1);
+                                setResult(FILES_SCAN_SUCCESS, intent1);
+                                finish();
+                            }
+
+                        } else {
+                            /**
+                             * 未选中任何文件
+                             */
+                            intent.putExtra("path", "--------->");
+                            setResult(FILE_SCAN_FAILURE, intent);
+                            finish();
+                        }
                     }
+
                 }
             }
         });
@@ -231,6 +275,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         fileItemAdapter = new FileItemAdapter(fileBeanList, this);
         listViewFile.setAdapter(fileItemAdapter);
         listViewFile.setItemsCanFocus(true);//让listview的item获取到焦点
+        /**
+         * listview的单击事件
+         */
         listViewFile.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -241,6 +288,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     String newPath = fileBeanList.get(position).getFilePath();
                     fileBeanList.clear();
                     searchFile(newPath);
+                    /**
+                     * 进入文件夹后取消多选模式
+                     */
+                    chooseType=0;
                 } else {
                     if (operateType.equals("double")) {
                         if (checkedView == (view.hashCode())) {
@@ -268,20 +319,35 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                             view.setBackgroundColor(Color.CYAN);
                         }
                     } else if (operateType.equals("more")) {
-                        if (viewsChooosedList != null) {
-                            if (viewsChooosedList.contains(view)) {
-                                viewsChooosedList.remove(view);
-                                view.setBackgroundColor(Color.TRANSPARENT);
-                                filesChoosedList.remove(fileBeanList.get(position));
+                        /**
+                         * 多选模式
+                         */
+                        if(chooseType==1){
+                            /**
+                             * 长按后
+                             */
+                            if( fileBeanList.get(position).isChecked==true){
+                                fileBeanList.get(position).isChecked=false;
+                            }else{
+                                fileBeanList.get(position).isChecked=true;
+                            }
+                            fileItemAdapter.notifyDataSetChanged();
+                        }else{
+                            if (viewsChooosedList != null) {
+                                if (viewsChooosedList.contains(view)) {
+                                    viewsChooosedList.remove(view);
+                                    view.setBackgroundColor(Color.TRANSPARENT);
+                                    filesChoosedList.remove(fileBeanList.get(position));
+                                } else {
+                                    viewsChooosedList.add(view);
+                                    view.setBackgroundColor(Color.CYAN);
+                                    filesChoosedList.add(fileBeanList.get(position));
+                                }
                             } else {
                                 viewsChooosedList.add(view);
                                 view.setBackgroundColor(Color.CYAN);
                                 filesChoosedList.add(fileBeanList.get(position));
                             }
-                        } else {
-                            viewsChooosedList.add(view);
-                            view.setBackgroundColor(Color.CYAN);
-                            filesChoosedList.add(fileBeanList.get(position));
                         }
 
                     } else {
@@ -303,7 +369,35 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 }
             }
         });
-
+        /**
+         * listview的长按事件
+         */
+        listViewFile.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                if(operateType.equals("more")){
+                    List<FileBean> fileBeanListTemp=new ArrayList<>();
+                    for(FileBean fileBeanItem:fileBeanList){
+                        fileBeanItem.enableMoreChoose=true;
+                        fileBeanListTemp.add(fileBeanItem);
+                    }
+                    fileBeanList.clear();
+                    for(FileBean fileBeanItem:fileBeanListTemp){
+                        fileBeanList.add(fileBeanItem);
+                    }
+                    fileItemAdapter.notifyDataSetChanged();
+                    chooseType=1;
+                    /**
+                     * 多选模式 取消排序和查找栏的显示 替换成全选悬浮
+                     */
+                    findViewById(R.id.order_lin_layout).setVisibility(View.GONE);
+                    findViewById(R.id.all_choose_lin_layout).setVisibility(View.VISIBLE);
+                }else{
+                    TastyToast.makeText(MainActivity.this,"当前模式下只能单选",Toast.LENGTH_SHORT,TastyToast.WARNING);
+                }
+                return true;
+            }
+        });
         /**
          * 向上按钮的点击事件
          */
@@ -486,12 +580,160 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 searchFile(rootPath);
             }
         });
+        textViewAllChoose=findViewById(R.id.textView_all_choose);
+        textViewAllChoose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //checkBoxAllChoose.callOnClick();//无效？？？？？what
+                if(checkBoxAllChoose.isChecked()){
+                    /**
+                     * 全选
+                     */
+                    List<FileBean> fileBeanListTemp=new ArrayList<>();
+                    for(FileBean fileBeanItem:fileBeanList){
+                        fileBeanItem.isChecked=false;
+                        fileBeanListTemp.add(fileBeanItem);
+                    }
+                    fileBeanList.clear();
+                    for(FileBean fileBeanItem:fileBeanListTemp){
+                        fileBeanList.add(fileBeanItem);
+                    }
+                    fileItemAdapter.notifyDataSetChanged();
+                    textViewAllChoose.setText("全选");
+                    checkBoxAllChoose.setChecked(false);
+                }else{
+                    /**
+                     * 取消全选
+                     */
+                    List<FileBean> fileBeanListTemp=new ArrayList<>();
+                    for(FileBean fileBeanItem:fileBeanList){
+                        fileBeanItem.isChecked=true;
+                        fileBeanListTemp.add(fileBeanItem);
+                    }
+                    fileBeanList.clear();
+                    for(FileBean fileBeanItem:fileBeanListTemp){
+                        fileBeanList.add(fileBeanItem);
+                    }
+                    fileItemAdapter.notifyDataSetChanged();
+                    textViewAllChoose.setText("取消全选");
+                    checkBoxAllChoose.setChecked(true);
+                }
+            }
+        });
+        checkBoxAllChoose=findViewById(R.id.checkbox_all_choose);
+        checkBoxAllChoose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(checkBoxAllChoose.isChecked()){
+                    /**
+                     * 全选
+                     */
+                    List<FileBean> fileBeanListTemp=new ArrayList<>();
+                    for(FileBean fileBeanItem:fileBeanList){
+                        fileBeanItem.isChecked=true;
+                        fileBeanListTemp.add(fileBeanItem);
+                    }
+                    fileBeanList.clear();
+                    for(FileBean fileBeanItem:fileBeanListTemp){
+                        fileBeanList.add(fileBeanItem);
+                    }
+                    fileItemAdapter.notifyDataSetChanged();
+                    textViewAllChoose.setText("取消全选");
+                }else{
+                    /**
+                     * 取消全选
+                     */
+                    List<FileBean> fileBeanListTemp=new ArrayList<>();
+                    for(FileBean fileBeanItem:fileBeanList){
+                        fileBeanItem.isChecked=false;
+                        fileBeanListTemp.add(fileBeanItem);
+                    }
+                    fileBeanList.clear();
+                    for(FileBean fileBeanItem:fileBeanListTemp){
+                        fileBeanList.add(fileBeanItem);
+                    }
+                    fileItemAdapter.notifyDataSetChanged();
+                    textViewAllChoose.setText("全选");
+                }
+            }
+        });
+
+
         /**
          * 获取根路径下的文件
          */
         radioButtonPhoneStorage.callOnClick();
+        /**
+         * 初始化布局信息
+         */
     }
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+        initView();
+    }
+    /**
+     * 初始化页面布局
+     */
+    @SuppressLint("WrongConstant")
+    public void initView(){
+        /**
+         * 1.首先确定1mm对应的px
+         */
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getRealMetrics(outMetrics);
+        int widthPixel = outMetrics.widthPixels; //横向像素
+        int heightPixel = outMetrics.heightPixels; //纵向像素
+        //float xdpi=outMetrics.xdpi;
+        float ydpi=outMetrics.ydpi;
+        oneMm2Px= 1 / 2.54f * ydpi/10;//1mm对应的像素
+        int eightMm= (int) (8*oneMm2Px);
+        /**
+         *1. ActionBar设置 隐藏掉好了
+         */
+        androidx.appcompat.app.ActionBar actionBar = getSupportActionBar(); //获取ActionBar对象
+//        if(actionBar!=null){
+//            actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+//            View actionBarView=View.inflate(MainActivity.this,R.layout.action_bar,null);
+//            TextView textViewTitle=actionBarView.findViewById(R.id.action_bar_title);
+//            textViewTitle.setHeight(eightMm);
+//            ImageView imageViewBack=actionBarView.findViewById(R.id.actionbarback);
+//            imageViewBack.setMaxHeight(eightMm/2);
+//            imageViewBack.setMaxWidth(eightMm/2);
+//            actionBarView.setBackgroundColor(Color.WHITE);
+//           //MATCH_PARENT
+//            androidx.appcompat.app.ActionBar.LayoutParams layoutParams=new androidx.appcompat.app.ActionBar.LayoutParams(
+//                    androidx.appcompat.app.ActionBar.LayoutParams.MATCH_PARENT,eightMm
+//            );
+//            actionBar.setCustomView(actionBarView,layoutParams); //绑定view
+//        }
+        actionBar.hide();
+        /**
+         * 2.View设置
+         */
+        /**
+         * 2.0 设置每一个组件对应的高度
+         */
+        //文件位置栏
+        LinearLayout linearLayout=findViewById(R.id.location_layout);
+        LinearLayout.LayoutParams layoutParams=new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,eightMm);
+        linearLayout.setLayoutParams(layoutParams);
+        //内存位置栏
+        LinearLayout linearLayout_second=findViewById(R.id.second_lin_layout);
+        linearLayout_second.setLayoutParams(layoutParams);
+        //文件类型
+        LinearLayout linearLayout_three=findViewById(R.id.three_lin_layout);
+        linearLayout_three.setLayoutParams(layoutParams);
+        //确定按钮
+       // Toast.makeText(this,eightMm+"mm",Toast.LENGTH_SHORT).show();
+        buttonEnsure=findViewById(R.id.ensure); //提前绑定一下 还未初始化呢
+        buttonEnsure.setHeight(eightMm);
+        /**
+         * 2.1 计算每一页显示的listview的数量
+         * 不确定每一列的高度 所以只能先默认7个
+         */
+        list_item_max=7;
+    }
     /**
      * 初始化页面数据//根据路径获取数据
      */
@@ -636,48 +878,26 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     }
                     fileItemAdapter.notifyDataSetChanged();
                 }
+                /**
+                 * 每次更换目录都要换算 是否显示的文件数量大于一页显示的文件数量
+                 * 如果大于 则显示搜索和排序按钮
+                 * 如果小于 则不显示
+                 */
+                /**
+                 * 设置悬浮按钮的显示和关闭
+                 */
+                findViewById(R.id.all_choose_lin_layout).setVisibility(View.GONE); //取消全选悬浮
+                if(fileBeanList2.size()>list_item_max){
+                    findViewById(R.id.order_lin_layout).setVisibility(View.VISIBLE);
+                }else{
+                    findViewById(R.id.order_lin_layout).setVisibility(View.INVISIBLE);
+                }
             }
-
         } else {
             //TastyToast.makeText(getApplicationContext(), "哇，没有权限", TastyToast.LENGTH_LONG, TastyToast.INFO);
             EasyPermissions.requestPermissions(this,"内存读写权限社区",W_R_REQUEST_CODE,permission);
-//            EasyPermission easyPermission = EasyPermission.build()
-//                    .mRequestCode(W_R_REQUEST_CODE)
-//                    .mContext(MainActivity.this)
-//                    .mPerms(permission)
-//                    .mResult(new EasyPermissionResult() {
-//                        @Override
-//                        public void onPermissionsAccess(int requestCode) {
-//                            super.onPermissionsAccess(requestCode);
-//                            //获取权限成功,重新刷新数据
-//                            TastyToast.makeText(getApplicationContext(), "授权成功", TastyToast.LENGTH_LONG, TastyToast.INFO);
-//                            searchFile(rootPath);
-//                        }
-//
-//                        @Override
-//                        public void onPermissionsDismiss(int requestCode, @NonNull List<String> permissions) {
-//                            super.onPermissionsDismiss(requestCode, permissions);
-//                            /**
-//                             *  权限被用户拒绝
-//                             *  再重新申请
-//                             */
-//                            TastyToast.makeText(getApplicationContext(), "取消了授权，重新申请", TastyToast.LENGTH_LONG, TastyToast.INFO);
-//                            searchFile(rootPath);
-//                        }
-//
-//                        @Override
-//                        public boolean onDismissAsk(int requestCode, @NonNull List<String> permissions) {
-//                            //你的权限被用户禁止了并且不能请求了你怎么办
-//                            // easyPermission.openAppDetails(MainActivity.this, "Call Phone - Give me the permission to dial the number for you");
-//                            TastyToast.makeText(getApplicationContext(), "取消了授权，不能使用此模块", TastyToast.LENGTH_LONG, TastyToast.INFO);
-//                            return true;
-//                        }
-//                    });
-//            easyPermission.requestPermission(); //权限发起申请
-            //searchFile(rootPath);
         }
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);

@@ -8,7 +8,8 @@ public class FileBean implements Comparable<FileBean>{
     public double fileSize; //文件大小
     public String lastModified;//最后修改时间
     public long chidFileNumber;//子文件数量
-
+    public boolean enableMoreChoose=false; //是否处于多选模式下
+    public boolean isChecked=false; //是否选中
     public String getLastModified() {
         return lastModified;
     }

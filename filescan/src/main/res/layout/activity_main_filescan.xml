@@ -6,7 +6,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity">
+<!--    <include-->
+<!--        android:id="@+id/topbar"-->
+<!--        layout="@layout/action_bar"-->
+<!--        ></include>-->
     <LinearLayout
+        android:id="@+id/location_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center">
@@ -46,10 +51,12 @@
         android:background="#9999CC" />
 
     <LinearLayout
+        android:id="@+id/second_lin_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
        >
         <TextView
+            android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="内存位置:" />
@@ -59,8 +66,14 @@
             android:layout_height="20dp"
             android:layout_gravity="center"/>
     </LinearLayout>
-
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:background="#9999CC" />
     <LinearLayout
+        android:id="@+id/three_lin_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center">
@@ -84,6 +97,12 @@
 
             />
     </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:background="#9999CC" />
     <ListView
         android:id="@+id/filelist"
         android:layout_width="match_parent"
@@ -95,24 +114,54 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="-50dp">
-        <Button
-            android:id="@+id/buttonSearch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="搜索"/>
+        android:layout_marginTop="-100dp"
+        android:orientation="vertical"
+        >
+        <LinearLayout
+            android:id="@+id/order_lin_layout"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center">
+            <Button
+                android:id="@+id/buttonSearch"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/search"
+                android:text=""/>
+            <Button
+                android:id="@+id/buttonOrder"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/order"
+                android:layout_marginLeft="10dp"
+               />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/all_choose_lin_layout"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center"
+            android:visibility="gone">
+            <CheckBox
+                android:id="@+id/checkbox_all_choose"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                />
+            <TextView
+                android:id="@+id/textView_all_choose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#000"
+                android:text="全选">
+            </TextView>
+        </LinearLayout>
         <Button
             android:id="@+id/ensure"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
             android:text="确定"
             android:layout_weight="1"
             />
-        <Button
-            android:id="@+id/buttonOrder"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="排序"/>
     </LinearLayout>
 
 </LinearLayout>

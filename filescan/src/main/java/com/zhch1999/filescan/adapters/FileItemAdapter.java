@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -48,12 +49,34 @@ public class FileItemAdapter extends BaseAdapter {
         TextView textViewLastModifed=convertView.findViewById(R.id.modify_time);
         textViewLastModifed.setText(fileBeansList.get(position).getLastModified());//最后一次修改时间
         Boolean isDirec=fileBeansList.get(position).isDirec();
+        CheckBox checkBox=convertView.findViewById(R.id.checkbox_item);
         if(isDirec){
-            imageView.setImageResource(R.drawable.directory);
+            /**
+             * 文件夹默认不可多选
+             */
+            if(fileBeansList.get(position).enableMoreChoose){
+                checkBox.setVisibility(View.INVISIBLE);
+            }else{
+                checkBox.setVisibility(View.GONE);
+            }
+            imageView.setImageResource(R.drawable.ic_folder);
             System.out.println(fileBeansList.get(position).getChidFileNumber()+"---------------项");
             textViewFileSize.setText(fileBeansList.get(position).getChidFileNumber()+"项");
         }else{
-            imageView.setImageResource(R.drawable.dwg);
+            /**
+             * 文件根据判断来进行筛选
+             */
+            if(fileBeansList.get(position).enableMoreChoose){
+                checkBox.setVisibility(View.VISIBLE);
+                if(fileBeansList.get(position).isChecked==false){
+                   // checkBox.callOnClick();
+                }else{
+                    checkBox.setChecked(true);
+                }
+            }else{
+                checkBox.setVisibility(View.GONE);
+            }
+            imageView.setImageResource(R.drawable.ic_file);
             /**
              * 1073741824==>g
              * 1048576==> m
