@@ -29,8 +29,8 @@
     private final static int FILES_SCAN_SUCCESS= 222;//获取文件列表成功
  ```
  重写OnActivityResult方法，接收返回参数
- ```
-  @Override
+```
+ @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent intentOut) {
         /**
          * 1.启动activities时有请求码 这个可用于目标Activity确认启动的actitvty对象
@@ -69,10 +69,10 @@
         }
         super.onActivityResult(requestCode, resultCode, intentOut);
     }
-    ```
+```
     调用Activity
     ```
-     Intent intent = new Intent(MainActivity.this, com.zhch1999.filescan.MainActivity.class);
+    Intent intent = new Intent(MainActivity.this, com.zhch1999.filescan.MainActivity.class);
                 String[] arrFileType ={"CAD图", "dwg", "dxf","txt","dat"};
                 intent.putExtra("fileTypes",arrFileType);//用户自定义的筛选格式 可以为空 
                 intent.putExtra("operateType","single");//操作类型 single为单击确定， double为双击确认 more为多选 前两者均只能选择一种模式
