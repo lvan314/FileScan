@@ -32,7 +32,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     //权限插件
-    implementation 'com.github.githubZYQ:easypermission:v1.0.0'
+    implementation 'pub.devrel:easypermissions:3.0.0'
     //弹窗
     implementation 'com.sdsmdg.tastytoast:tastytoast:0.1.1'
     //下拉框

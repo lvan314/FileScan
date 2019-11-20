@@ -36,9 +36,6 @@ import com.zhch1999.filescan.beans.FileBean;
 import com.zhch1999.filescan.beans.FileHistoryBean;
 import com.zhch1999.filescan.utils.FileScanUitl;
 import com.zhch1999.filescan.views.HorizontalListView;
-import com.zyq.easypermission.EasyPermission;
-import com.zyq.easypermission.EasyPermissionResult;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,7 +43,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+import pub.devrel.easypermissions.EasyPermissions;
+
+public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
     private Spinner spinnerFileType;//文件类型选择器
     private Button buttonEnsure;//确定
     private ListView listViewFile; //文件列表
@@ -512,7 +511,7 @@ public class MainActivity extends AppCompatActivity {
         /**
          * 读取权限判断
          */
-        if (EasyPermission.build().hasPermission(this, permission)) {
+        if (EasyPermissions.hasPermissions(this, permission)) {
             //fileBeanList.addAll(new FileScanUitl().fileScan(path,""));
             String[] seflSuffix;
             if(shaixuanType==null){
@@ -640,54 +639,78 @@ public class MainActivity extends AppCompatActivity {
             }
 
         } else {
-            TastyToast.makeText(getApplicationContext(), "哇，没有权限", TastyToast.LENGTH_LONG, TastyToast.INFO);
-            EasyPermission easyPermission = EasyPermission.build()
-                    .mRequestCode(W_R_REQUEST_CODE)
-                    .mContext(MainActivity.this)
-                    .mPerms(permission)
-                    .mResult(new EasyPermissionResult() {
-                        @Override
-                        public void onPermissionsAccess(int requestCode) {
-                            super.onPermissionsAccess(requestCode);
-                            //获取权限成功,重新刷新数据
-                            searchFile(rootPath);
-                        }
-
-                        @Override
-                        public void onPermissionsDismiss(int requestCode, @NonNull List<String> permissions) {
-                            super.onPermissionsDismiss(requestCode, permissions);
-                            /**
-                             *  权限被用户拒绝
-                             *  再重新申请
-                             */
-                            searchFile(rootPath);
-                        }
-
-                        @Override
-                        public boolean onDismissAsk(int requestCode, @NonNull List<String> permissions) {
-                            //你的权限被用户禁止了并且不能请求了你怎么办
-                            // easyPermission.openAppDetails(MainActivity.this, "Call Phone - Give me the permission to dial the number for you");
-                            TastyToast.makeText(getApplicationContext(), "取消了授权，不能使用此模块", TastyToast.LENGTH_LONG, TastyToast.INFO);
-                            return true;
-                        }
-                    });
-            easyPermission.requestPermission();
+            //TastyToast.makeText(getApplicationContext(), "哇，没有权限", TastyToast.LENGTH_LONG, TastyToast.INFO);
+            EasyPermissions.requestPermissions(this,"内存读写权限社区",W_R_REQUEST_CODE,permission);
+//            EasyPermission easyPermission = EasyPermission.build()
+//                    .mRequestCode(W_R_REQUEST_CODE)
+//                    .mContext(MainActivity.this)
+//                    .mPerms(permission)
+//                    .mResult(new EasyPermissionResult() {
+//                        @Override
+//                        public void onPermissionsAccess(int requestCode) {
+//                            super.onPermissionsAccess(requestCode);
+//                            //获取权限成功,重新刷新数据
+//                            TastyToast.makeText(getApplicationContext(), "授权成功", TastyToast.LENGTH_LONG, TastyToast.INFO);
+//                            searchFile(rootPath);
+//                        }
+//
+//                        @Override
+//                        public void onPermissionsDismiss(int requestCode, @NonNull List<String> permissions) {
+//                            super.onPermissionsDismiss(requestCode, permissions);
+//                            /**
+//                             *  权限被用户拒绝
+//                             *  再重新申请
+//                             */
+//                            TastyToast.makeText(getApplicationContext(), "取消了授权，重新申请", TastyToast.LENGTH_LONG, TastyToast.INFO);
+//                            searchFile(rootPath);
+//                        }
+//
+//                        @Override
+//                        public boolean onDismissAsk(int requestCode, @NonNull List<String> permissions) {
+//                            //你的权限被用户禁止了并且不能请求了你怎么办
+//                            // easyPermission.openAppDetails(MainActivity.this, "Call Phone - Give me the permission to dial the number for you");
+//                            TastyToast.makeText(getApplicationContext(), "取消了授权，不能使用此模块", TastyToast.LENGTH_LONG, TastyToast.INFO);
+//                            return true;
+//                        }
+//                    });
+//            easyPermission.requestPermission(); //权限发起申请
+            //searchFile(rootPath);
         }
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(requestCode==W_R_REQUEST_CODE){
+            EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+        }
+    }
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> list) {
+        // Some permissions have been granted
+        // ...
+        searchFile(rootPath);
+    }
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> list) {
+        // Some permissions have been denied
+        // ...
+        TastyToast.makeText(getApplicationContext(), "拒绝了权限申请，无法正常使用", TastyToast.LENGTH_SHORT, TastyToast.WARNING);
+    }
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (EasyPermission.APP_SETTINGS_RC == requestCode) {
-            //从设置界面返回
-            //Result from system setting
-            if (EasyPermission.build().hasPermission(MainActivity.this)) {
-                searchFile(rootPath);
-            } else {
-                //从设置回来还是没给你权限
-                TastyToast.makeText(getApplicationContext(), "还是没给我权限呀", TastyToast.LENGTH_LONG, TastyToast.WARNING);
-            }
-        } else if (requestCode == SEARCH_ACTVITY_CODE) {
+//        if (EasyPermission.APP_SETTINGS_RC == requestCode) {
+//            //从设置界面返回
+//            //Result from system setting
+//            if (EasyPermission.build().hasPermission(MainActivity.this)) {
+//                searchFile(rootPath);
+//            } else {
+//                //从设置回来还是没给你权限
+//                TastyToast.makeText(getApplicationContext(), "还是没给我权限呀", TastyToast.LENGTH_LONG, TastyToast.WARNING);
+//            }
+//        }
+        if (requestCode == SEARCH_ACTVITY_CODE) {
             switch (resultCode) {
                 case FILE_SCAN_SUCCESS:
                     Intent intent = data;
